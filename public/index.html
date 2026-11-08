@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HYPERVAULT - Ultimate Fullstack Web Arcade</title>
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-[#07090e] dark:bg-[#07090e] text-slate-100 min-h-screen flex flex-col selection:bg-purple-600 selection:text-white transition-colors duration-300">
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="sticky top-0 z-40 bg-[#07090e]/95 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-3">
+      
+      <!-- LEFT: 3-LINE DRAWER BUTTON + LOGO -->
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSideMenu()" class="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 text-slate-300 hover:text-white transition shadow-sm active:scale-95 cursor-pointer">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+        <div class="flex items-center gap-2 cursor-pointer" onclick="showStoreView()">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-600/30">
+            <i data-lucide="gamepad-2" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
+          </div>
+          <span id="brandLogoText" class="text-lg sm:text-xl font-black tracking-tight text-white">HYPER<span class="text-purple-400">VAULT</span></span>
+        </div>
+      </div>
+
+      <!-- SEARCH BAR -->
+      <div class="flex-1 max-w-md hidden md:block relative">
+        <input type="text" id="searchInput" oninput="filterGames()" placeholder="Search action, arcade, racing games..." class="w-full bg-slate-900/90 border border-slate-800 rounded-full py-2 pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition">
+        <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-2.5"></i>
+      </div>
+
+      <!-- RIGHT: AUTH CONTROLS -->
+      <div class="flex items-center gap-2">
+        <button id="navLoginBtn" onclick="openLoginModal()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition active:scale-95 cursor-pointer">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          <span>Admin Login</span>
+        </button>
+
+        <div id="navAdminControls" class="hidden flex items-center gap-2">
+          <button onclick="openAdCenterModal()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-xs font-bold transition">
+            <i data-lucide="badge-dollar-sign" class="w-4 h-4 text-amber-400"></i>
+            <span>Ad Manager</span>
+          </button>
+          <button onclick="openAdminModal('upload')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-300 font-bold text-xs transition">
+            <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Upload</span>
+          </button>
+          <button onclick="openAdminModal('manage')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+            <span>Dashboard</span>
+          </button>
+          <button onclick="logoutAdmin()" class="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:text-red-400 text-slate-400 transition" title="Logout">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= TOP HEADER BANNER AD SLOT ================= -->
+  <div class="max-w-7xl mx-auto w-full px-3 sm:px-6 pt-3">
+    <div id="headerAdContainer" class="w-full min-h-[90px] bg-slate-900/40 border border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-600 text-xs tracking-widest uppercase overflow-hidden">
+      <span>Header Advertisement Slot (728x90)</span>
+    </div>
+  </div>
+
+  <!-- ================= MAIN STOREFRONT ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-8 sm:space-y-10">
+
+    <!-- STORE CATALOG -->
+    <div id="storeView" class="space-y-6 sm:space-y-10">
+      
+      <!-- HERO FEATURED SECTION -->
+      <section id="heroSection" class="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-purple-950/50 via-slate-900 to-slate-900 border border-purple-500/20 p-5 sm:p-10 shadow-2xl">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center">
+          <div class="md:col-span-7 space-y-3 sm:space-y-4 text-center md:text-left">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider border border-purple-500/30">
+              <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-400"></i> Featured Spotlight
+            </span>
+            <h1 id="heroTitle" class="text-2xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">Welcome to HYPERVAULT</h1>
+            <p id="heroDesc" class="text-slate-300 text-xs sm:text-sm lg:text-base max-w-lg mx-auto md:mx-0">High-performance gaming portal. Instant play on any screen.</p>
+            <div class="pt-2 flex justify-center md:justify-start">
+              <button id="heroPlayBtn" onclick="launchFeaturedGame()" class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-purple-600/40 transition active:scale-95">
+                <i data-lucide="play" class="w-4 h-4 fill-current"></i> PLAY GAME NOW
+              </button>
+            </div>
+          </div>
+          <div class="md:col-span-5 flex justify-center">
+            <img id="heroThumb" src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600" class="w-full max-w-xs sm:max-w-sm aspect-video object-cover rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl">
+          </div>
+        </div>
+      </section>
+
+      <!-- CATEGORIES -->
+      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 text-xs font-bold">
+        <button onclick="setCategory('all')" class="cat-pill active flex-shrink-0 px-4 py-2 rounded-xl bg-purple-600 text-white border border-purple-500">All Games</button>
+        <button onclick="setCategory('Action')" class="cat-pill flex-shrink-0 px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800">Action</button>
+        <button onclick="setCategory('Arcade')" class="cat-pill flex-shrink-0 px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800">Arcade</button>
+        <button onclick="setCategory('Racing')" class="cat-pill flex-shrink-0 px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800">Racing</button>
+        <button onclick="setCategory('Puzzle')" class="cat-pill flex-shrink-0 px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800">Puzzle</button>
+      </div>
+
+      <!-- CATALOG GRID -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-5 h-5 text-purple-400"></i> All Published Games (<span id="gameCount">0</span>)
+          </h2>
+        </div>
+        <div id="gameGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+      </section>
+    </div>
+
+    <!-- GAME PLAYER VIEW -->
+    <div id="playerView" class="hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <button onclick="showStoreView()" class="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Store
+        </button>
+        <button onclick="shareGame()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 text-xs font-bold hover:bg-emerald-600/30 transition">
+          <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Share Game
+        </button>
+      </div>
+
+      <div id="gameContainer" class="relative w-full aspect-[16/9] bg-black rounded-xl sm:rounded-2xl overflow-hidden border border-purple-500/40 shadow-2xl flex items-center justify-center">
+        <iframe id="gameIframe" class="w-full h-full border-0" allow="fullscreen; autoplay; pointer-lock"></iframe>
+        
+        <div class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10">
+          <button onclick="reloadActiveGame()" title="Restart" class="p-1.5 text-slate-300 hover:text-white"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+          <button onclick="fullscreenGame()" title="Fullscreen" class="p-1.5 text-slate-300 hover:text-purple-400"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+        </div>
+      </div>
+
+      <!-- IN-GAME AD SLOT -->
+      <div id="gameAdContainer" class="w-full min-h-[90px] bg-slate-900/40 border border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-600 text-xs uppercase tracking-widest overflow-hidden">
+        <span>In-Game Banner Advertisement Slot</span>
+      </div>
+
+      <div class="bg-slate-900/60 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-800 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 id="playerTitle" class="text-xl sm:text-2xl font-black text-white">Title</h1>
+            <p id="playerCategory" class="text-xs text-purple-400 font-semibold mt-0.5">Arcade</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+            <i data-lucide="eye" class="w-4 h-4 text-slate-300"></i>
+            <span id="playerPlays">0 Plays</span>
+          </div>
+        </div>
+        <p id="playerDesc" class="text-slate-300 text-xs sm:text-sm leading-relaxed whitespace-pre-line"></p>
+        <div class="p-3 bg-black/40 border border-slate-800 rounded-xl text-xs font-mono text-cyan-300">
+          <strong>Controls:</strong> <span id="playerControls">Touch / Keyboard / Mouse</span>
+        </div>
+      </div>
+
+      <div class="space-y-3 pt-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i> Recommended Games
+        </h3>
+        <div id="relatedGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= MASTER REAL LOGIN / SIGNUP MODAL ================= -->
+  <div id="loginModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl">
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/40 text-purple-400 flex items-center justify-center mx-auto shadow-lg mb-2">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <h2 id="authModalTitle" class="text-xl font-black text-white">Master Admin Portal</h2>
+        <p class="text-xs text-slate-400">Permanent Login • Stays active until you logout.</p>
+      </div>
+
+      <!-- TABS: LOGIN vs SIGNUP (ANY EMAIL) -->
+      <div class="flex items-center gap-2 bg-slate-950 p-1 rounded-xl text-xs font-bold">
+        <button onclick="setAuthTab('login')" id="authTabLoginBtn" class="flex-1 py-1.5 rounded-lg bg-purple-600 text-white transition">Log In</button>
+        <button onclick="setAuthTab('signup')" id="authTabSignupBtn" class="flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white transition">Sign Up (New Email)</button>
+      </div>
+
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-3.5 text-xs">
+        <div id="signupNameField" class="hidden">
+          <label class="block font-bold text-slate-300 mb-1">Your Full Name</label>
+          <input type="text" id="authName" placeholder="Admin Boss" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Any Email Address *</label>
+          <input type="email" id="authEmail" required placeholder="name@yourmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Password *</label>
+          <input type="password" id="authPassword" required placeholder="Minimum 6 characters" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <p id="authErrorMsg" class="hidden text-xs text-red-400 font-semibold text-center"></p>
+
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="closeLoginModal()" class="w-1/3 py-2.5 rounded-xl border border-slate-800 text-slate-400 font-bold hover:text-white">Close</button>
+          <button type="submit" id="authSubmitBtn" class="w-2/3 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-600/30 transition">Log In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= THE SLIDE-OVER DRAWER MENU ================= -->
+  <div id="sideMenuBackdrop" onclick="toggleSideMenu()" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden transition-opacity duration-300"></div>
+
+  <aside id="sideMenuDrawer" class="fixed top-0 left-0 z-50 h-full w-80 max-w-[85vw] bg-slate-950 border-r border-slate-800 p-5 flex flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out shadow-2xl">
+    
+    <div class="space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center">
+            <i data-lucide="layers" class="w-4 h-4 text-white"></i>
+          </div>
+          <span class="font-black text-white tracking-wide text-sm">CONTROL MENU</span>
+        </div>
+        <button onclick="toggleSideMenu()" class="p-1 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <nav class="space-y-1.5 text-xs font-bold">
+        <button onclick="showStoreView(); toggleSideMenu();" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-900 text-slate-300 hover:text-white transition">
+          <i data-lucide="home" class="w-4 h-4 text-purple-400"></i>
+          <span>Storefront Catalog</span>
+        </button>
+
+        <button onclick="guardedAdminAction('upload'); toggleSideMenu();" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-900 text-slate-300 hover:text-white transition">
+          <i data-lucide="cloud-upload" class="w-4 h-4 text-cyan-400"></i>
+          <span>Upload New Game</span>
+        </button>
+
+        <button onclick="guardedAdminAction('manage'); toggleSideMenu();" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-900 text-slate-300 hover:text-white transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-emerald-400"></i>
+          <span>Manage & Delete Games</span>
+        </button>
+
+        <button onclick="guardedAdminAction('ads'); toggleSideMenu();" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 transition">
+          <i data-lucide="badge-dollar-sign" class="w-4 h-4 text-amber-400"></i>
+          <span>Ad Manager (Adsterra/AdSense)</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- DRAWER BOTTOM -->
+    <div class="border-t border-slate-800/80 pt-4 space-y-3">
+      <div id="drawerAuthStatus" class="text-xs text-slate-400">
+        Status: <span class="text-amber-400 font-bold">Guest Mode</span>
+      </div>
+      <button id="drawerAuthBtn" onclick="toggleAuthAction(); toggleSideMenu();" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg">
+        <i data-lucide="lock" class="w-4 h-4"></i> Admin Login
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= AD MANAGER MODAL (WITH BULLETPROOF ADSTERRA SANDBOX) ================= -->
+  <div id="adCenterModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl sm:rounded-3xl p-5 sm:p-7 space-y-5 max-h-[92vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-lg font-black text-white flex items-center gap-2">
+            <i data-lucide="badge-dollar-sign" class="w-5 h-5 text-amber-400"></i> Ad Monetization Manager
+          </h2>
+          <p class="text-[11px] text-slate-400">Select Ad Network category and paste the snippet.</p>
+        </div>
+        <button onclick="closeAdCenterModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="handleSaveAdSettings(event)" class="space-y-4 text-xs">
+        
+        <!-- DISPLAY SWITCH -->
+        <div class="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-xl">
+          <div>
+            <p class="font-bold text-white text-sm">Display Ads Live</p>
+            <p class="text-slate-500 text-[11px]">Turn ON to render advertisements across the portal.</p>
+          </div>
+          <input type="checkbox" id="adEnabledCheck" class="w-5 h-5 accent-purple-600 rounded cursor-pointer">
+        </div>
+
+        <!-- AD NETWORK CATEGORY PICKER -->
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Select Ad Network Category *</label>
+          <select id="adNetworkSelect" onchange="handleAdCategoryChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white font-semibold focus:outline-none focus:border-purple-500">
+            <option value="adsterra">🔥 Adsterra (Banners & Scripts)</option>
+            <option value="adsense">🌐 Google AdSense</option>
+            <option value="monetag">⚡ Monetag / PropellerAds</option>
+            <option value="custom">📄 Custom HTML / Iframe Banner</option>
+          </select>
+          <p id="adCategoryHint" class="text-[10px] text-amber-400 mt-1">Adsterra JavaScript snippet codes are executed in an isolated sandboxed engine.</p>
+        </div>
+
+        <!-- 1. HEADER AD CODE -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="font-bold text-slate-300">1. Header Banner Ad Code (728x90)</label>
+          </div>
+          <textarea id="adHeaderCode" rows="4" placeholder="Paste your Adsterra or AdSense snippet here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-[11px] text-amber-300 focus:outline-none focus:border-purple-500"></textarea>
+        </div>
+
+        <!-- 2. IN-GAME AD CODE -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="font-bold text-slate-300">2. In-Game Bottom Banner Ad Code (728x90 or 300x250)</label>
+          </div>
+          <textarea id="adGameCode" rows="4" placeholder="Paste your second Ad snippet here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 font-mono text-[11px] text-amber-300 focus:outline-none focus:border-purple-500"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeAdCenterModal()" class="px-4 py-2 text-slate-400">Cancel</button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black shadow-lg shadow-amber-500/20 transition">
+            Save & Execute Ads Live
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN UPLOAD & DASHBOARD MODAL ================= -->
+  <div id="adminModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl sm:rounded-3xl p-5 sm:p-7 space-y-5 max-h-[92vh] overflow-y-auto shadow-2xl">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-lg font-black text-white flex items-center gap-2"><i data-lucide="shield" class="w-5 h-5 text-purple-400"></i> Admin Panel</h2>
+          <p class="text-[11px] text-slate-400">Manage all your personal games.</p>
+        </div>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+          <p class="text-[10px] text-slate-500 uppercase font-bold">Total Games</p>
+          <p id="statTotalGames" class="text-xl font-black text-white mt-0.5">0</p>
+        </div>
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+          <p class="text-[10px] text-slate-500 uppercase font-bold">Total Platform Plays</p>
+          <p id="statTotalPlays" class="text-xl font-black text-purple-400 mt-0.5">0</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-2 text-xs font-bold">
+        <button onclick="switchAdminTab('upload')" id="tabUploadBtn" class="px-4 py-1.5 rounded-lg bg-purple-600 text-white">Upload Game</button>
+        <button onclick="switchAdminTab('manage')" id="tabManageBtn" class="px-4 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white">Manage & Delete Games</button>
+      </div>
+
+      <!-- UPLOAD TAB -->
+      <form id="uploadTabContent" onsubmit="handleBackendUpload(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Game Title *</label>
+          <input type="text" id="formTitle" required placeholder="e.g. Cyber Runner 2077" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Category</label>
+            <select id="formCategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white">
+              <option value="Arcade">Arcade</option>
+              <option value="Action">Action</option>
+              <option value="Racing">Racing</option>
+              <option value="Puzzle">Puzzle</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Controls Description</label>
+            <input type="text" id="formControls" placeholder="e.g. Touch / WASD" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Short Description</label>
+          <textarea id="formDesc" rows="2" placeholder="Brief summary..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"></textarea>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div class="p-3 bg-slate-950 border border-dashed border-slate-800 rounded-xl">
+            <label class="block font-bold text-purple-300 mb-1">1. Thumbnail Image</label>
+            <input type="file" id="formThumbFile" accept="image/*" class="w-full text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-purple-900/60 file:text-purple-200">
+          </div>
+          <div class="p-3 bg-slate-950 border border-dashed border-slate-800 rounded-xl">
+            <label class="block font-bold text-cyan-300 mb-1">2. Game Build (.ZIP) *</label>
+            <input type="file" id="formZipFile" accept=".zip" required class="w-full text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-cyan-900/60 file:text-cyan-200">
+          </div>
+        </div>
+        <div id="uploadStatus" class="hidden p-3 bg-purple-950/40 border border-purple-500/40 rounded-xl text-purple-300 flex items-center gap-2">
+          <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+          <span>Extracting game on server... Please wait!</span>
+        </div>
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeAdminModal()" class="px-4 py-2 text-slate-400">Cancel</button>
+          <button type="submit" id="submitBtn" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold">Publish Live</button>
+        </div>
+      </form>
+
+      <!-- MANAGE TAB -->
+      <div id="manageTabContent" class="hidden space-y-3">
+        <div id="adminGamesList" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-slate-950 border-t border-slate-800/80 py-8 mt-16 text-slate-400 text-xs text-center">
+    <p class="font-bold text-white text-sm">HYPERVAULT GAMING PLATFORM</p>
+    <p class="text-slate-500 mt-1">Single-Owner Private Arcade • All Games Published by Master Admin</p>
+  </footer>
+
+  <!-- ================= ADVANCED SCRIPT ENGINE ================= -->
+  <script>
+    let games = [];
+    let currentCategory = 'all';
+    let activeGame = null;
+    let siteSettings = { adsEnabled: false, selectedNetwork: 'adsterra', headerAdCode: '', gameAdCode: '' };
+    let isAdminLoggedIn = false;
+    let authMode = 'login'; // 'login' or 'signup'
+
+    // ================= 1. ADSTERRA / ADSENSE BULLETPROOF IFRAME EXECUTION ================= //
+    function renderAdInIframe(containerId, adCode, height = 90) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      container.innerHTML = '';
+      if (!adCode || !adCode.trim()) return;
+
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = `${height}px`;
+      iframe.style.border = 'none';
+      iframe.style.overflow = 'hidden';
+      iframe.scrolling = 'no';
+
+      container.appendChild(iframe);
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { margin:0; padding:0; display:flex; justify-content:center; align-items:center; background:transparent; overflow:hidden; }
+          </style>
+        </head>
+        <body>
+          ${adCode}
+        </body>
+        </html>
+      `;
+
+      try {
+        iframe.srcdoc = htmlContent;
+      } catch (err) {
+        // Fallback for older browsers
+        const doc = iframe.contentWindow || iframe.contentDocument.document || iframe.contentDocument;
+        doc.document.open();
+        doc.document.write(htmlContent);
+        doc.document.close();
+      }
+    }
+
+    function applyLiveAds() {
+      const hAd = document.getElementById('headerAdContainer');
+      const gAd = document.getElementById('gameAdContainer');
+
+      if (siteSettings.adsEnabled) {
+        if (siteSettings.headerAdCode) {
+          renderAdInIframe('headerAdContainer', siteSettings.headerAdCode, 90);
+        } else {
+          hAd.innerHTML = `<span class="text-slate-600 text-xs uppercase">${siteSettings.selectedNetwork} Header Ad Ready</span>`;
+        }
+
+        if (siteSettings.gameAdCode) {
+          renderAdInIframe('gameAdContainer', siteSettings.gameAdCode, 90);
+        } else {
+          gAd.innerHTML = `<span class="text-slate-600 text-xs uppercase">${siteSettings.selectedNetwork} In-Game Ad Ready</span>`;
+        }
+      } else {
+        hAd.innerHTML = `<span>Header Advertisement Slot (728x90)</span>`;
+        gAd.innerHTML = `<span>In-Game Banner Advertisement Slot</span>`;
+      }
+    }
+
+    function handleAdCategoryChange() {
+      const net = document.getElementById('adNetworkSelect').value;
+      const hint = document.getElementById('adCategoryHint');
+      if (net === 'adsterra') hint.innerText = "Adsterra JavaScript snippet codes are executed in an isolated sandboxed engine.";
+      else if (net === 'adsense') hint.innerText = "Paste the Google AdSense code block.";
+      else if (net === 'monetag') hint.innerText = "Paste Monetag In-Page Push or Banner script tag.";
+      else hint.innerText = "Supports any iframe, HTML, or JavaScript tag.";
+    }
+
+    async function handleSaveAdSettings(e) {
+      e.preventDefault();
+      const enabled = document.getElementById('adEnabledCheck').checked;
+      const network = document.getElementById('adNetworkSelect').value;
+      const headerCode = document.getElementById('adHeaderCode').value;
+      const gameCode = document.getElementById('adGameCode').value;
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            adsEnabled: enabled,
+            selectedNetwork: network,
+            headerAdCode: headerCode,
+            gameAdCode: gameCode
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          siteSettings = data.settings;
+          applyLiveAds();
+          alert('Ad settings saved! Ads are now executing live on the website.');
+          closeAdCenterModal();
+        }
+      } catch (err) {
+        alert('Failed saving ads: ' + err.message);
+      }
+    }
+
+    // ================= 2. REAL PERMANENT AUTH SYSTEM (ANY EMAIL) ================= //
+    async function verifyPermanentSession() {
+      const token = localStorage.getItem('hv_admin_token');
+      if (!token) {
+        setLoggedOutUI();
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/verify', {
+          headers: { 'Authorization': token }
+        });
+        const data = await res.json();
+        if (data.valid) {
+          setLoggedInUI(data.user.email);
+        } else {
+          localStorage.removeItem('hv_admin_token');
+          setLoggedOutUI();
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      }
+    }
+
+    function setLoggedInUI(email) {
+      isAdminLoggedIn = true;
+      document.getElementById('navLoginBtn').classList.add('hidden');
+      document.getElementById('navAdminControls').classList.remove('hidden');
+      document.getElementById('drawerAuthStatus').innerHTML = `Status: <span class="text-emerald-400 font-bold">Logged In (${email})</span>`;
+      document.getElementById('drawerAuthBtn').innerHTML = `<i data-lucide="log-out" class="w-4 h-4"></i> Logout`;
+      document.getElementById('drawerAuthBtn').className = "w-full py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:text-red-400 text-xs font-bold text-slate-300 flex items-center justify-center gap-2";
+      lucide.createIcons();
+    }
+
+    function setLoggedOutUI() {
+      isAdminLoggedIn = false;
+      document.getElementById('navLoginBtn').classList.remove('hidden');
+      document.getElementById('navAdminControls').classList.add('hidden');
+      document.getElementById('drawerAuthStatus').innerHTML = `Status: <span class="text-amber-400 font-bold">Guest Mode</span>`;
+      document.getElementById('drawerAuthBtn').innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i> Admin Login`;
+      document.getElementById('drawerAuthBtn').className = "w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white flex items-center justify-center gap-2 shadow-lg";
+      lucide.createIcons();
+    }
+
+    function openLoginModal() {
+      document.getElementById('loginModal').classList.remove('hidden');
+      document.getElementById('authErrorMsg').classList.add('hidden');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('loginModal').classList.add('hidden');
+    }
+
+    function setAuthTab(mode) {
+      authMode = mode;
+      const logBtn = document.getElementById('authTabLoginBtn');
+      const sgnBtn = document.getElementById('authTabSignupBtn');
+      const submit = document.getElementById('authSubmitBtn');
+      const title = document.getElementById('authModalTitle');
+      const nameField = document.getElementById('signupNameField');
+
+      if (mode === 'login') {
+        logBtn.className = "flex-1 py-1.5 rounded-lg bg-purple-600 text-white transition";
+        sgnBtn.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white transition";
+        submit.innerText = "Log In";
+        title.innerText = "Master Admin Login";
+        nameField.classList.add('hidden');
+      } else {
+        sgnBtn.className = "flex-1 py-1.5 rounded-lg bg-purple-600 text-white transition";
+        logBtn.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white transition";
+        submit.innerText = "Create Account";
+        title.innerText = "Sign Up New Admin";
+        nameField.classList.remove('hidden');
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      const name = document.getElementById('authName').value.trim();
+      const errBox = document.getElementById('authErrorMsg');
+
+      const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
+      const bodyPayload = authMode === 'login' ? { email, password } : { name, email, password };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyPayload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          // SAVE PERMANENT SESSION TOKEN
+          localStorage.setItem('hv_admin_token', data.token);
+          setLoggedInUI(email);
+          closeLoginModal();
+          alert(authMode === 'login' 
+            ? `Welcome back! You are now permanently logged in.` 
+            : `Account created for ${email}! Confirmation notification logged. You are now permanently logged in.`);
+        } else {
+          errBox.innerText = data.error || 'Authentication error';
+          errBox.classList.remove('hidden');
+        }
+      } catch (err) {
+        errBox.innerText = 'Server error: ' + err.message;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    async function logoutAdmin() {
+      if (confirm('Are you sure you want to log out from Master Admin?')) {
+        const token = localStorage.getItem('hv_admin_token');
+        await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': token } }).catch(() => {});
+        localStorage.removeItem('hv_admin_token');
+        setLoggedOutUI();
+        showStoreView();
+      }
+    }
+
+    function toggleAuthAction() {
+      if (isAdminLoggedIn) logoutAdmin();
+      else openLoginModal();
+    }
+
+    function guardedAdminAction(action) {
+      if (!isAdminLoggedIn) {
+        openLoginModal();
+        return;
+      }
+      if (action === 'upload') openAdminModal('upload');
+      else if (action === 'manage') openAdminModal('manage');
+      else if (action === 'ads') openAdCenterModal();
+    }
+
+    // ================= 3. STOREFRONT & GAMES LOGIC ================= //
+    function toggleSideMenu() {
+      const drawer = document.getElementById('sideMenuDrawer');
+      const backdrop = document.getElementById('sideMenuBackdrop');
+      const isOpen = !drawer.classList.contains('-translate-x-full');
+      if (isOpen) {
+        drawer.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      } else {
+        drawer.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      }
+    }
+
+    function openAdCenterModal() {
+      if (!isAdminLoggedIn) { openLoginModal(); return; }
+      document.getElementById('adCenterModal').classList.remove('hidden');
+      document.getElementById('adEnabledCheck').checked = siteSettings.adsEnabled;
+      document.getElementById('adNetworkSelect').value = siteSettings.selectedNetwork || 'adsterra';
+      document.getElementById('adHeaderCode').value = siteSettings.headerAdCode || '';
+      document.getElementById('adGameCode').value = siteSettings.gameAdCode || '';
+      handleAdCategoryChange();
+    }
+    function closeAdCenterModal() { document.getElementById('adCenterModal').classList.add('hidden'); }
+
+    function openAdminModal(tab = 'upload') {
+      if (!isAdminLoggedIn) { openLoginModal(); return; }
+      document.getElementById('adminModal').classList.remove('hidden');
+      switchAdminTab(tab);
+      updateAdminDashboard();
+    }
+    function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); }
+
+    function switchAdminTab(tab) {
+      if (tab === 'upload') {
+        document.getElementById('uploadTabContent').classList.remove('hidden');
+        document.getElementById('manageTabContent').classList.add('hidden');
+        document.getElementById('tabUploadBtn').className = "px-4 py-1.5 rounded-lg bg-purple-600 text-white";
+        document.getElementById('tabManageBtn').className = "px-4 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white";
+      } else {
+        document.getElementById('uploadTabContent').classList.add('hidden');
+        document.getElementById('manageTabContent').classList.remove('hidden');
+        document.getElementById('tabUploadBtn').className = "px-4 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white";
+        document.getElementById('tabManageBtn').className = "px-4 py-1.5 rounded-lg bg-purple-600 text-white";
+        renderAdminGamesList();
+      }
+    }
+
+    async function initPlatform() {
+      try {
+        const [gamesRes, settingsRes] = await Promise.all([
+          fetch('/api/games'),
+          fetch('/api/settings')
+        ]);
+        games = await gamesRes.json();
+        siteSettings = await settingsRes.json();
+        applyLiveAds();
+
+        if (games.length > 0) {
+          document.getElementById('heroTitle').innerText = games[0].title;
+          document.getElementById('heroDesc').innerText = games[0].description;
+          document.getElementById('heroThumb').src = games[0].thumbnail;
+        }
+        renderStore();
+        updateAdminDashboard();
+        await verifyPermanentSession();
+      } catch (err) {
+        console.error("Init error:", err);
+      }
+    }
+
+    function renderStore() {
+      const grid = document.getElementById('gameGrid');
+      grid.innerHTML = '';
+      let filtered = games;
+      if (currentCategory !== 'all') {
+        filtered = filtered.filter(g => g.category.toLowerCase() === currentCategory.toLowerCase());
+      }
+      document.getElementById('gameCount').innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center border border-dashed border-slate-800 rounded-2xl">
+            <p class="text-slate-400 text-sm">No games published yet.</p>
+            <p class="text-xs text-purple-400 mt-1 cursor-pointer font-bold" onclick="guardedAdminAction('upload')">Click here to upload your first game ZIP!</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(game => {
+        const card = document.createElement('div');
+        card.className = "group relative flex flex-col bg-slate-900/60 rounded-xl sm:rounded-2xl overflow-hidden border border-slate-800 hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-900/30 cursor-pointer";
+        card.innerHTML = `
+          <div class="relative aspect-[16/10] w-full overflow-hidden bg-slate-950" onclick="launchGame('${game.id}')">
+            <img src="${game.thumbnail}" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+            <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition"></div>
+            <span class="absolute top-2 left-2 text-[9px] sm:text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-black/70 text-purple-300 border border-white/10 backdrop-blur-md">
+              ${game.category}
+            </span>
+          </div>
+          <div class="p-2.5 sm:p-3 flex flex-col flex-1 justify-between space-y-2">
+            <div onclick="launchGame('${game.id}')">
+              <h3 class="text-xs sm:text-sm font-bold text-white group-hover:text-purple-300 transition truncate">${game.title}</h3>
+              <p class="text-[10px] sm:text-[11px] text-slate-400 line-clamp-1 mt-0.5">${game.description}</p>
+            </div>
+            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-400">
+              <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Live
+              </span>
+              <span>${game.plays} plays</span>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    async function launchGame(gameId) {
+      const game = games.find(g => g.id === gameId);
+      if (!game) return;
+      activeGame = game;
+
+      fetch(`/api/games/${game.id}/play`, { method: 'POST' }).then();
+      game.plays = (game.plays || 0) + 1;
+
+      document.getElementById('storeView').classList.add('hidden');
+      document.getElementById('playerView').classList.remove('hidden');
+
+      document.getElementById('playerTitle').innerText = game.title;
+      document.getElementById('playerCategory').innerText = game.category;
+      document.getElementById('playerDesc').innerText = game.description;
+      document.getElementById('playerPlays').innerText = `${game.plays} Plays`;
+      document.getElementById('playerControls').innerText = game.controls || 'Touch / Keyboard / Mouse';
+
+      document.getElementById('gameIframe').src = game.play_url;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      renderRelatedGames(game.id);
+    }
+
+    function renderRelatedGames(activeId) {
+      const relatedGrid = document.getElementById('relatedGrid');
+      relatedGrid.innerHTML = '';
+      const otherGames = games.filter(g => g.id !== activeId).slice(0, 4);
+
+      otherGames.forEach(g => {
+        const item = document.createElement('div');
+        item.className = "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden cursor-pointer hover:border-purple-500 transition";
+        item.onclick = () => launchGame(g.id);
+        item.innerHTML = `
+          <img src="${g.thumbnail}" class="w-full aspect-video object-cover">
+          <p class="p-2 text-xs font-bold text-white truncate">${g.title}</p>
+        `;
+        relatedGrid.appendChild(item);
+      });
+    }
+
+    function launchFeaturedGame() {
+      if (games.length > 0) launchGame(games[0].id);
+    }
+
+    function showStoreView() {
+      document.getElementById('gameIframe').src = '';
+      document.getElementById('playerView').classList.add('hidden');
+      document.getElementById('storeView').classList.remove('hidden');
+      initPlatform();
+    }
+
+    function reloadActiveGame() {
+      if (activeGame) document.getElementById('gameIframe').src = activeGame.play_url;
+    }
+
+    function fullscreenGame() {
+      const container = document.getElementById('gameContainer');
+      if (!document.fullscreenElement) container.requestFullscreen();
+      else document.exitFullscreen();
+    }
+
+    function shareGame() {
+      if (navigator.share) {
+        navigator.share({ title: activeGame.title, url: window.location.href });
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Game link copied to clipboard!');
+      }
+    }
+
+    async function handleBackendUpload(e) {
+      e.preventDefault();
+      const title = document.getElementById('formTitle').value.trim();
+      const category = document.getElementById('formCategory').value;
+      const controls = document.getElementById('formControls').value.trim();
+      const desc = document.getElementById('formDesc').value.trim();
+      const thumbFile = document.getElementById('formThumbFile').files[0];
+      const zipFile = document.getElementById('formZipFile').files[0];
+
+      if (!zipFile) return alert('Select game ZIP file!');
+
+      document.getElementById('uploadStatus').classList.remove('hidden');
+      document.getElementById('submitBtn').disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('category', category);
+        formData.append('description', desc);
+        formData.append('controls', controls);
+        if (thumbFile) formData.append('thumbnail', thumbFile);
+        formData.append('zip', zipFile);
+
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const result = await res.json();
+
+        if (result.success) {
+          alert(`Game "${title}" uploaded successfully!`);
+          closeAdminModal();
+          await initPlatform();
+          launchGame(result.game.id);
+        } else {
+          alert('Upload Failed: ' + result.error);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        document.getElementById('uploadStatus').classList.add('hidden');
+        document.getElementById('submitBtn').disabled = false;
+      }
+    }
+
+    function updateAdminDashboard() {
+      document.getElementById('statTotalGames').innerText = games.length;
+      const totalPlays = games.reduce((acc, g) => acc + (g.plays || 0), 0);
+      document.getElementById('statTotalPlays').innerText = totalPlays.toLocaleString();
+    }
+
+    function renderAdminGamesList() {
+      const list = document.getElementById('adminGamesList');
+      list.innerHTML = '';
+      if (games.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">No games uploaded yet.</p>`;
+        return;
+      }
+      games.forEach(g => {
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-2.5 bg-slate-950 border border-slate-800 rounded-xl";
+        row.innerHTML = `
+          <div class="flex items-center gap-2.5 overflow-hidden">
+            <img src="${g.thumbnail}" class="w-9 h-9 rounded-lg object-cover flex-shrink-0">
+            <div class="truncate">
+              <p class="text-xs font-bold text-white truncate">${g.title}</p>
+              <p class="text-[10px] text-purple-400 font-semibold">${g.category} • ${g.plays} plays</p>
+            </div>
+          </div>
+          <button onclick="deleteGame('${g.id}', '${g.title}')" class="p-2 text-slate-400 hover:text-red-400 transition" title="Delete">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        `;
+        list.appendChild(row);
+      });
+      lucide.createIcons();
+    }
+
+    async function deleteGame(id, title) {
+      if (!confirm(`Delete "${title}" completely?`)) return;
+      const res = await fetch(`/api/games/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        alert(`"${title}" deleted.`);
+        await initPlatform();
+        renderAdminGamesList();
+      }
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.classList.remove('bg-purple-600', 'text-white', 'border-purple-500');
+        btn.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
+      });
+      event.target.classList.add('bg-purple-600', 'text-white', 'border-purple-500');
+      event.target.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-800');
+      renderStore();
+    }
+
+    function filterGames() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('#gameGrid > div');
+      games.forEach((g, idx) => {
+        const matches = g.title.toLowerCase().includes(q) || g.category.toLowerCase().includes(q);
+        if (cards[idx]) cards[idx].style.display = matches ? 'flex' : 'none';
+      });
+    }
+
+    window.onload = () => {
+      initPlatform();
+    };
+  </script>
+</body>
+</html>
